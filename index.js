@@ -26,7 +26,7 @@ app.post("/webhook", (req, res) => {
 
   // Schedule email after 2 minutes
   setTimeout(() => {
-    sendReminderEmail(formData);
+    sendReminderEmail(fullName, email);
   }, 2 * 60 * 1000); // 2 minutes in milliseconds
 
   res.status(200).send("Webhook received");
