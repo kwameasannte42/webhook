@@ -12,7 +12,17 @@ app.use((req, res, next) => {
 
 app.post("/webhook", (req, res) => {
   const formData = req.body;
+
+  const firstName = formData.Field15; // Assuming 'Field15' contains the first name
+  const lastName = formData.Field16; // Assuming 'Field16' contains the last name
+  const email = formData.Field13; // Assuming 'Field13' contains the email address
+
+  // Combine first and last name to create full name
+  const fullName = `${firstName} ${lastName}`;
+
   console.log("Received form data:", formData);
+  console.log("Name:", fullName);
+  console.log("Email:", email);
 
   // Schedule email after 2 minutes
   setTimeout(() => {
@@ -22,20 +32,20 @@ app.post("/webhook", (req, res) => {
   res.status(200).send("Webhook received");
 });
 
-function sendReminderEmail(data) {
+function sendReminderEmail(name, email) {
   let transporter = nodemailer.createTransport({
     service: "Gmail",
     auth: {
-      user: process.env.SMTP_USER, 
-      pass: process.env.SMTP_PASS,
+      user: process.env.SMTP_USER, // Your Gmail address
+      pass: process.env.SMTP_PASS, // App Password or SMTP password
     },
   });
 
   let mailOptions = {
-    from: "kwameasante42@gmail.com",
-    to: data.Field13, // field name in wufoo
+    from: process.env.SMTP_USER, // Sender address
+    to: email, // Recipient email address
     subject: "Reminder: Follow-Up Required",
-    text: `Hello ${data.Field16, Field15},\n\nThis is a reminder to follow up on your recent submission.`,
+    text: `Hello ${name},\n\nThis is a reminder to follow up on your recent submission.`,
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
