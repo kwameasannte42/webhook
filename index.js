@@ -12,7 +12,7 @@ app.post("/webhook", (req, res) => {
   // Schedule email after 24 hours
   setTimeout(() => {
     sendReminderEmail(formData);
-  }, 1 * 60 * 60 * 1000); // 24 hours in milliseconds
+  }, 2 * 60 * 1000); // 24 hours in milliseconds
 
   res.status(200).send("Webhook received");
 });
@@ -42,6 +42,8 @@ function sendReminderEmail(data) {
   });
 }
 
-app.listen(3000, () => {
-  console.log("Server is running on port 3000");
+// Listen on the port provided by Render
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
 });
