@@ -26,16 +26,16 @@ function sendReminderEmail(data) {
   let transporter = nodemailer.createTransport({
     service: "Gmail",
     auth: {
-      user: process.env.SMTP_USER, // It's better to use environment variables for credentials
-      pass: process.env.SMTP_PASS, // Never hardcode sensitive information
+      user: process.env.SMTP_USER, 
+      pass: process.env.SMTP_PASS,
     },
   });
 
   let mailOptions = {
     from: "kwameasante42@gmail.com",
-    to: data.Email, // Assuming 'Email' is the field name in Wufoo
+    to: data.Field13, // field name in wufoo
     subject: "Reminder: Follow-Up Required",
-    text: `Hello ${data.Name},\n\nThis is a reminder to follow up on your recent submission.`,
+    text: `Hello ${data.Field16, Field15},\n\nThis is a reminder to follow up on your recent submission.`,
   };
 
   transporter.sendMail(mailOptions, (error, info) => {
