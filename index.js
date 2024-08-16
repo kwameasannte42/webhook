@@ -5,14 +5,19 @@ const nodemailer = require("nodemailer");
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
 
+app.use((req, res, next) => {
+  console.log(`Received a ${req.method} request to ${req.url}`);
+  next();
+});
+
 app.post("/webhook", (req, res) => {
   const formData = req.body;
   console.log("Received form data:", formData);
 
-  // Schedule email after 24 hours
+  // Schedule email after 2 minutes
   setTimeout(() => {
     sendReminderEmail(formData);
-  }, 2 * 60 * 1000); // 24 hours in milliseconds
+  }, 2 * 60 * 1000); // 2 minutes in milliseconds
 
   res.status(200).send("Webhook received");
 });
@@ -21,8 +26,8 @@ function sendReminderEmail(data) {
   let transporter = nodemailer.createTransport({
     service: "Gmail",
     auth: {
-      user: "kwameasante42@gmail.com",
-      pass: "nanakwame40",
+      user: process.env.SMTP_USER, // It's better to use environment variables for credentials
+      pass: process.env.SMTP_PASS, // Never hardcode sensitive information
     },
   });
 
@@ -45,5 +50,5 @@ function sendReminderEmail(data) {
 // Listen on the port provided by Render
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+  console.log(`Server is running on port ${port}`);
 });
