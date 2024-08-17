@@ -34,10 +34,12 @@ app.post("/webhook", (req, res) => {
 
 function sendReminderEmail(name, email) {
   let transporter = nodemailer.createTransport({
-    service: "Gmail",
+    host: "smtp.office365.com",
+    port: 587,
+    secure: false, // use TLS
     auth: {
-      user: process.env.SMTP_USER, // Your Gmail address
-      pass: process.env.SMTP_PASS, // App Password or SMTP password
+      user: process.env.SMTP_USER, //  Outlook email 
+      pass: process.env.SMTP_PASS, // Outlook password
     },
   });
 
