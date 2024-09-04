@@ -47,9 +47,9 @@ const workshops = {
 app.post("/webhook", (req, res) => {
   const formData = req.body;
 
-  const firstName = formData.Field15; // First name
-  const lastName = formData.Field16; // Last name
-  const email = formData.Field13; // Email
+  const firstName = formData.Field1; // First name
+  const lastName = formData.Field2; // Last name
+  const email = formData.Field3; // Email
 
   // Combine first and last name to create full name
   const fullName = `${firstName} ${lastName}`;
