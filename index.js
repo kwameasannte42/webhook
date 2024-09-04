@@ -10,12 +10,46 @@ app.use((req, res, next) => {
   next();
 });
 
+// Mapping workshops to their details
+const workshops = {
+  Field5: {
+    name: "Wright State University",
+    date: "9/11/24",
+    time: "12p-1:30p",
+    location: "Dayton Campus, Building 10, Rm 009",
+  },
+  Field6: {
+    name: "Western Governors University",
+    date: "9/18/24",
+    time: "12p-1:30p",
+    location: "Dayton Campus, Building 10, Rm 009",
+  },
+  Field7: {
+    name: "Ohio State University",
+    date: "9/19/24",
+    time: "12p-1:30p",
+    location: "Dayton Campus, Building 10, Rm 011",
+  },
+  Field8: {
+    name: "University of Dayton",
+    date: "9/25/24",
+    time: "12p-1:30p",
+    location: "Dayton Campus, Building 10, Rm 009",
+  },
+  Field9: {
+    name: "University of Cincinnati",
+    date: "9/26/24",
+    time: "12p-1:30p",
+    location: "Dayton Campus, Building 10, Rm 009",
+  },
+};
+
 app.post("/webhook", (req, res) => {
   const formData = req.body;
 
-  const firstName = formData.Field15; // Assuming 'Field15' contains the first name
-  const lastName = formData.Field16; // Assuming 'Field16' contains the last name
-  const email = formData.Field13; // Assuming 'Field13' contains the email address
+  const firstName = formData.Field15; // First name
+  const lastName = formData.Field16; // Last name
+  const email = formData.Field13; // Email
 
   // Combine first and last name to create full name
   const fullName = `${firstName} ${lastName}`;
@@ -24,37 +58,66 @@ app.post("/webhook", (req, res) => {
   console.log("Name:", fullName);
   console.log("Email:", email);
 
-  // Schedule email after 2 minutes
+  // Collect selected workshops based on checkbox fields (Field5 to Field9)
+  const selectedWorkshops = [];
+  ["Field5", "Field6", "Field7", "Field8", "Field9"].forEach((field) => {
+    if (formData[field]) {
+      selectedWorkshops.push(workshops[field]);
+    }
+  });
+
+  console.log("Selected Workshops:", selectedWorkshops);
+
+  // Schedule emails for each selected workshop
   setTimeout(() => {
-    sendReminderEmail(fullName, email);
-  }, 2 * 60 * 1000); // 2 minutes in milliseconds
+    selectedWorkshops.forEach((workshop) => {
+      sendReminderEmail(fullName, email, workshop);
+    });
+  }, 2 * 60 * 1000); // 2 minutes delay
 
   res.status(200).send("Webhook received");
 });
 
-function sendReminderEmail(name, email) {
+function sendReminderEmail(name, email, workshop) {
   let transporter = nodemailer.createTransport({
-    host: "smtp.office365.com",
-    port: 587,
-    secure: false, // use TLS
+    service: "Gmail",
     auth: {
-      user: process.env.SMTP_USER, //  Outlook email 
-      pass: process.env.SMTP_PASS, // Outlook password
+      user: process.env.SMTP_USER, // Your Gmail address
+      pass: process.env.SMTP_PASS, // Gmail App Password
     },
   });
+
+  // Customize email subject and body based on the workshop details
+  const subject = `Reminder: ${workshop.name} Happening Soon!`;
+  const text =
+    `Dear ${name},\n\n` +
+    `This is a friendly reminder that our upcoming ${workshop.name} workshop is just around the corner! ` +
+    `We’re excited to have you join us to learn more about the transfer process and how to make the most of your academic journey.\n\n` +
+    `Workshop Details:\n\n` +
+    `· Date: ${workshop.date}\n` +
+    `· Time: ${workshop.time}\n` +
+    `· Location: ${workshop.location}\n\n` +
+    `If you have questions or need further information, please contact the Transfer Center team at 937-512-2100 ` +
+    `or email us at transfercenter@sinclair.edu. You can also check out our website for upcoming events!\n\n` +
+    `We look forward to seeing you at the workshop,\n\n` +
+    `The Transfer Center Team`;
 
   let mailOptions = {
     from: process.env.SMTP_USER, // Sender address
     to: email, // Recipient email address
-    subject: "Reminder: Follow-Up Required",
-    text: `Hello ${name},\n\nThis is a reminder to follow up on your recent submission.`,
+    subject: subject,
+    text: text,
   };
 
+  // Send the email
   transporter.sendMail(mailOptions, (error, info) => {
     if (error) {
       console.log("Error sending email:", error);
     } else {
-      console.log("Reminder email sent:", info.response);
+      console.log(
+        `Reminder email for ${workshop.name} sent to ${email}:`,
+        info.response
+      );
     }
   });
 }
