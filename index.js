@@ -1,6 +1,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
+const ics = require("ics"); // Install this using npm: npm install ics
 
 const app = express();
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -98,7 +99,7 @@ function sendReminderEmail(name, email, workshop) {
     `· Time: ${workshop.time}\n` +
     `· Location: ${workshop.location}\n\n` +
     `If you have questions or need further information, please contact the Transfer Center team at 937-512-2100 ` +
-    `or email us at transfercenter@sinclair.edu. You can also check out our website at https://www.sinclair.edu/services/graduation-career/transfer-student-services/wright-state-university/\n\n for upcoming events!\n\n` +
+    `or email us at transfercenter@sinclair.edu. You can also check out our website for upcoming events!\n\n` +
     `We look forward to seeing you at the workshop,\n\n` +
     `The Transfer Center Team`;
 
@@ -113,31 +114,54 @@ function sendReminderEmail(name, email, workshop) {
       <li>Location: ${workshop.location}</li>
     </ul>
     
-    <p>For more information, visit our <a href="https://www.sinclair.edu/services/graduation-career/transfer-student-services/wright-state-university/">Website</a></p>
-    
-    <p>If you have questions or need further information, please contact the Transfer Center team at 937-512-2100 
-    or email us at transfercenter@sinclair.edu. You can also check out our <a href="https://www.sinclair.edu/services/graduation-career/transfer-student-services/wright-state-university">website</a> for upcoming events!</p>
-    
     <p>We look forward to seeing you at the workshop,<br>The Transfer Center Team</p>`;
 
-  let mailOptions = {
-    from: process.env.SMTP_USER, // Sender address
-    to: email, // Recipient email address
-    subject: subject,
-    text: text, // Plain text version
-    html: html, // HTML version
+  // Create the .ics calendar event
+  const eventDate = workshop.date.split("/"); // Assuming date is "MM/DD/YY"
+  const [month, day, year] = eventDate.map(Number);
+  const startTime = workshop.time.split("-")[0].trim().split(":");
+  const endTime = workshop.time.split("-")[1].trim().split(":");
+
+  const icsEvent = {
+    start: [year, month, day, parseInt(startTime[0]), parseInt(startTime[1])],
+    end: [year, month, day, parseInt(endTime[0]), parseInt(endTime[1])],
+    title: workshop.name,
+    location: workshop.location,
+    description: `Join us for the ${workshop.name} workshop at ${workshop.location}.`,
+    status: 'CONFIRMED',
+    busyStatus: 'BUSY',
   };
 
-  // Send the email
-  transporter.sendMail(mailOptions, (error, info) => {
+  ics.createEvent(icsEvent, (error, value) => {
     if (error) {
-      console.log("Error sending email:", error);
-    } else {
-      console.log(`Reminder email for ${workshop.name} sent to ${email}:`, info.response);
+      console.log("Error creating calendar event:", error);
+      return;
     }
+
+    let mailOptions = {
+      from: process.env.SMTP_USER, // Sender address
+      to: email, // Recipient email address
+      subject: subject,
+      text: text, // Plain text version
+      html: html, // HTML version
+      attachments: [
+        {
+          filename: 'event.ics',
+          content: value, // The .ics file content
+        },
+      ],
+    };
+
+    // Send the email with the attached calendar invite
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log("Error sending email:", error);
+      } else {
+        console.log(`Reminder email for ${workshop.name} sent to ${email}:`, info.response);
+      }
+    });
   });
 }
-
 
 // Listen on the port provided by Render
 const port = process.env.PORT || 3000;
